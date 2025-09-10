@@ -4,7 +4,7 @@ import plotly.express as px
 import datetime
 
 st.set_page_config(page_title="Dashboard Doanh thu", layout="wide")
-st.title("📊 Dashboard Doanh thu BHX")
+st.title("📊 Dashboard Doanh thu BHX") 
 
 # === Load dữ liệu gốc và mapping ===
 df = pd.read_excel("dthumodel.xlsx")
@@ -50,6 +50,7 @@ if sieuthi_chon:
 else:
     doanhthu_t8 = (
         dthu_thang8[
+            (dthu_thang8["Tháng"] == "T8") &
             (dthu_thang8["AM"].isin(am_chon))
         ]["Tổng doanh thu"].sum()
     )
@@ -58,7 +59,7 @@ else:
 doanhthu_hientai = df_filtered["Tổng doanh thu"].sum()
 
 today = datetime.date.today()
-ngay = today.day
+ngay = today.day 
 
 if ngay > 1:
     doanhthu_du_kien = doanhthu_hientai / (ngay - 1) * 30
