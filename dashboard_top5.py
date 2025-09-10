@@ -3,85 +3,89 @@ import pandas as pd
 import plotly.express as px
 import datetime
 
-# ===============================
-# Cấu hình trang
-# ===============================
 st.set_page_config(page_title="Dashboard Doanh thu", layout="wide")
-st.title("📊 Dashboard Doanh thu theo Ngành hàng & Model")
+st.title("📊 Dashboard Doanh thu BHX")
 
-# ===============================
-# Load dữ liệu
-# ===============================
-file_path = "dthumodel.xlsx"   # 👉 thay bằng tên file dữ liệu
-df = pd.read_excel(file_path)
+# === Load dữ liệu gốc và mapping ===
+df = pd.read_excel("dthumodel.xlsx")
+mapping = pd.read_excel("mapping_NH.xlsx")
+dthu_thang8 = pd.read_excel("dthuthang.xlsx")
 
 # Chuẩn hóa tên cột
 df.columns = df.columns.str.strip()
+mapping.columns = mapping.columns.str.strip()
+dthu_thang8.columns = dthu_thang8.columns.str.strip()
 
-# ===============================
-# Bộ lọc
-# ===============================
-col1, col2 = st.columns(2)
+# Merge để lấy cột NH (FMCG vs Fresh)
+df = df.merge(mapping, on="Ngành hàng", how="left")
 
-with col1:
-    am_list = sorted(df["AM"].dropna().unique())
-    am_chon = st.multiselect("Chọn AM", options=am_list, default=am_list)
+# === Bộ lọc AM & Siêu thị ===
+st.sidebar.header("🔎 Bộ lọc dữ liệu")
 
+am_list = sorted(df["AM"].dropna().unique())
+am_chon = st.sidebar.multiselect("Chọn AM", options=am_list, default=am_list[:1])
 df_am = df[df["AM"].isin(am_chon)] if am_chon else df.copy()
 
-with col2:
-    sieuthi_list = sorted(df_am["Mã siêu thị"].dropna().unique())
-    sieuthi_chon = st.multiselect("Chọn Siêu thị", options=sieuthi_list, default=sieuthi_list)
+sieuthi_list = sorted(df_am["Mã siêu thị"].dropna().unique())
+sieuthi_chon = st.sidebar.multiselect(
+    "Chọn Siêu thị",
+    options=sieuthi_list,
+    default=sieuthi_list[:1] if sieuthi_list else []
+)
 
 df_filtered = df_am[df_am["Mã siêu thị"].isin(sieuthi_chon)] if sieuthi_chon else df_am.copy()
 
-# === KPI dòng 1 & 2 ===
+# === Doanh thu tháng 8 ===
+doanhthu_t8 = dthu_thang8[dthu_thang8["Tháng"] == "T8"].copy()
+doanhthu_t8 = doanhthu_t8.rename(columns={"Tổng doanh thu": "Doanh thu T8"})
+df_kpi = df_filtered.merge(
+    doanhthu_t8[["Mã siêu thị", "Doanh thu T8"]],
+    on="Mã siêu thị",
+    how="left"
+)
+tong_doanhthu_t8 = df_kpi["Doanh thu T8"].sum()
+
+# === KPI ===
 doanhthu_hientai = df_filtered["Tổng doanh thu"].sum()
+ngay = datetime.date.today().day
+doanhthu_du_kien = doanhthu_hientai / max(1, ngay - 1) * 30
 
-today = datetime.date.today()
-ngay = today.day
+st.markdown("### 📈 KPI Doanh thu")
+kpi1, kpi2, kpi3 = st.columns(3)
+kpi1.metric("💰 Doanh thu hiện tại", f"{doanhthu_hientai:,.0f}")
+kpi2.metric("📅 Dự kiến T9", f"{doanhthu_du_kien:,.0f}")
+kpi3.metric("📅 Doanh thu T8", f"{tong_doanhthu_t8:,.0f}")
 
-if ngay > 1:
-    doanhthu_du_kien = doanhthu_hientai / (ngay - 1) * 30
-else:
-    doanhthu_du_kien = doanhthu_hientai
+# === Biểu đồ tròn FMCG vs Fresh ===
+st.markdown("### 🥧 Cơ cấu Doanh thu FMCG vs Fresh")
 
-col1, col2 = st.columns(2)
-with col1:
-    st.metric("💰 Doanh thu đến hiện tại", f"{doanhthu_hientai:,.0f}")
-with col2:
-    st.metric("📅 Dự kiến tháng 9", f"{doanhthu_du_kien:,.0f}")
-
-# ===============================
-# Biểu đồ cột: Tổng doanh thu theo Ngành hàng
-# ===============================
-doanhthu_nganhhang = (
-    df_filtered.groupby("Ngành hàng")[["Tổng doanh thu"]]
+tong_doanhthu_nh = (
+    df_filtered.groupby("NH")[["Tổng doanh thu"]]
     .sum()
-    .sort_values("Tổng doanh thu", ascending=False)
     .reset_index()
 )
+tong_doanhthu_nh["Tỉ trọng (%)"] = (
+    tong_doanhthu_nh["Tổng doanh thu"] / tong_doanhthu_nh["Tổng doanh thu"].sum() * 100
+).round(2)
 
-fig = px.bar(
-    doanhthu_nganhhang,
-    x="Ngành hàng",
-    y="Tổng doanh thu",
-    title="Tổng doanh thu theo Ngành hàng",
-    text_auto=".2s"   # hiển thị gọn: 1.2M, 500K
+fig_pie = px.pie(
+    tong_doanhthu_nh,
+    names="NH",
+    values="Tổng doanh thu",
+    hole=0.3,
+    height=350
 )
-fig.update_layout(
-    xaxis_tickangle=-45,
-    height=600,
-    yaxis=dict(title="Tổng doanh thu", tickformat=",")
+st.plotly_chart(fig_pie, use_container_width=True)
+st.dataframe(
+    tong_doanhthu_nh.style.format({
+        "Tổng doanh thu": "{:,.0f}",
+        "Tỉ trọng (%)": "{:,.2f}"
+    }),
+    height=250
 )
 
-st.plotly_chart(fig, use_container_width=True)
-
-# ===============================
-# Top 10 nhóm hàng có doanh thu cao nhất
-# ===============================
-st.subheader("🔝 Top 10 Nhóm hàng có doanh thu cao nhất")
-
+# === Top 10 Nhóm hàng ===
+st.markdown("### 🔝 Top 10 Nhóm hàng theo Doanh thu")
 top10_nhomhang = (
     df_filtered.groupby("Nhóm hàng")[["Tổng doanh thu"]]
     .sum()
@@ -89,54 +93,12 @@ top10_nhomhang = (
     .head(10)
     .reset_index()
 )
-
-st.dataframe(
-    top10_nhomhang.style.format({"Tổng doanh thu": "{:,.0f}"})
+fig_top10 = px.bar(
+    top10_nhomhang,
+    x="Nhóm hàng",
+    y="Tổng doanh thu",
+    text_auto=".2s",
+    height=350
 )
-
-# ===============================
-# Top 5 model của 10 nhóm hàng trên
-# ===============================
-st.subheader("⭐ Top 5 Model bán tốt nhất trong 10 Nhóm hàng")
-
-list_top10 = top10_nhomhang["Nhóm hàng"].tolist()
-df_top10 = df_filtered[df_filtered["Nhóm hàng"].isin(list_top10)]
-
-# Tính doanh thu theo Model
-top5_models_per_group = (
-    df_top10.groupby(["Nhóm hàng", "Mã Model", "Model"])[["Tổng doanh thu", "Tổng số lượng"]]
-    .sum()
-    .reset_index()
-)
-
-# Lấy top 5 model theo doanh thu trong từng nhóm hàng
-result = (
-    top5_models_per_group
-    .sort_values(["Nhóm hàng", "Tổng doanh thu"], ascending=[True, False])
-    .groupby("Nhóm hàng")
-    .head(5)
-    .reset_index(drop=True)
-)
-
-# === Thêm tổng doanh thu nhóm hàng để sắp xếp ===
-nhomhang_order = (
-    df_top10.groupby("Nhóm hàng")[["Tổng doanh thu"]]
-    .sum()
-    .sort_values("Tổng doanh thu", ascending=False)
-    .reset_index()
-)
-
-# Merge để biết thứ tự nhóm hàng
-result = result.merge(nhomhang_order, on="Nhóm hàng", suffixes=("", "_nhom"))
-
-# Sort theo tổng doanh thu nhóm hàng (cao → thấp)
-result = result.sort_values(["Tổng doanh thu_nhom", "Tổng doanh thu"], ascending=[False, False])
-
-# Hiển thị
-st.dataframe(
-    result[["Nhóm hàng", "Mã Model", "Model", "Tổng doanh thu", "Tổng số lượng"]]
-    .style.format({
-        "Tổng doanh thu": "{:,.0f}",
-        "Tổng số lượng": "{:,.0f}"
-    })
-)
+st.plotly_chart(fig_top10, use_container_width=True)
+st.dataframe(top10_nhomhang.style.format({"Tổng doanh thu": "{:,.0f}"}), height=250)
