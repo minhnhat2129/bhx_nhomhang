@@ -213,7 +213,7 @@ with col2:
 
     # Tính tổng doanh thu và số lượng theo model
     top5_models_fmcg = (
-        df_top10_fmcg.groupby(["Nhóm hàng", "Mã Model", "Model"])[["Tổng doanh thu", "Tổng số lượng"]]
+        df_top10_fmcg.groupby(["Nhóm hàng", "Model"])[["Tổng doanh thu", "Tổng số lượng"]]
         .sum()
         .reset_index()
     )
@@ -240,7 +240,7 @@ with col2:
 
     # Hiển thị bảng
     st.dataframe(
-        result_fmcg[["Nhóm hàng", "Mã Model", "Model", "Tổng doanh thu", "Tổng số lượng"]]
+        result_fmcg[["Nhóm hàng", "Model", "Tổng doanh thu", "Tổng số lượng"]]
         .style.format({
             "Tổng doanh thu": "{:,.0f}",
             "Tổng số lượng": "{:,.0f}"
@@ -256,7 +256,7 @@ with col1:
     df_top10 = df_filtered[df_filtered["Nhóm hàng"].isin(list_top10)]
 
     top5_models_per_group = (
-        df_top10.groupby(["Nhóm hàng", "Mã Model", "Model"])[["Tổng doanh thu", "Tổng số lượng"]]
+        df_top10.groupby(["Nhóm hàng", "Model"])[["Tổng doanh thu", "Tổng số lượng"]]
         .sum()
         .reset_index()
     )
@@ -281,7 +281,7 @@ with col1:
     result = result.sort_values(["Tổng doanh thu_nhom", "Tổng doanh thu"], ascending=[False, False])
 
     st.dataframe(
-        result[["Nhóm hàng", "Mã Model", "Model", "Tổng doanh thu", "Tổng số lượng"]]
+        result[["Nhóm hàng", "Model", "Tổng doanh thu", "Tổng số lượng"]]
         .style.format({
             "Tổng doanh thu": "{:,.0f}",
             "Tổng số lượng": "{:,.0f}"
