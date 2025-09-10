@@ -11,14 +11,12 @@ df = pd.read_excel("dthumodel.xlsx")
 mapping = pd.read_excel("mapping_NH.xlsx")
 dthu_thang8 = pd.read_excel("dthuthang.xlsx")
 
-
-
 # Chuẩn hóa tên cột
 df.columns = df.columns.str.strip()
 mapping.columns = mapping.columns.str.strip()
 dthu_thang8.columns = dthu_thang8.columns.str.strip()
 
-# Merge để lấy cột NH (FMCG vs Fresh)
+# Merge để lấy cột NH (FMCG, Fresh, Đông mát...)
 df = df.merge(mapping, on="Ngành hàng", how="left")
 
 # === Bộ lọc AM & Siêu thị ===
@@ -38,30 +36,25 @@ with col2:
         default=sieuthi_list[:1] if sieuthi_list else []
     )
 
-
 # Lọc dữ liệu cuối cùng
 df_filtered = df_am[df_am["Mã siêu thị"].isin(sieuthi_chon)] if sieuthi_chon else df_am.copy()
 
-#===================================
+# ===================================
+# Mapping doanh thu T8 từ file dthuthang.xlsx
+if sieuthi_chon:
+    doanhthu_t8 = (
+        dthu_thang8[
+            (dthu_thang8["Mã siêu thị"].isin(sieuthi_chon))
+        ]["Tổng doanh thu"].sum()
+    )
+else:
+    doanhthu_t8 = (
+        dthu_thang8[
+            (dthu_thang8["AM"].isin(am_chon))
+        ]["Tổng doanh thu"].sum()
+    )
 
-    
-# Lọc dữ liệu tháng 8 trong file dthuthang.xlsx
-doanhthu_t8 = dthu_thang8[dthu_thang8["Tháng"] == "T8"].copy()
-
-# Đổi tên cột doanh thu để tránh trùng
-doanhthu_t8 = doanhthu_t8.rename(columns={"Tổng doanh thu": "Doanh thu T8"})
-
-# Merge với dữ liệu filter theo Mã siêu thị
-df_kpi = df_filtered.merge(
-    doanhthu_t8[["Mã siêu thị", "Doanh thu T8"]],
-    on="Mã siêu thị",
-    how="left"
-)    
-
-# Tính tổng doanh thu T8
-tong_doanhthu_t8 = df_kpi["Doanh thu T8"].sum()
-
-# === KPI dòng 1 & 2 ===
+# Tính KPI
 doanhthu_hientai = df_filtered["Tổng doanh thu"].sum()
 
 today = datetime.date.today()
@@ -72,14 +65,30 @@ if ngay > 1:
 else:
     doanhthu_du_kien = doanhthu_hientai
 
+#def format_vnd(value):
+    # Làm tròn về triệu
+#    value = round(value, -6)  
+#    ty = value // 1_000_000_000
+#    trieu = (value % 1_000_000_000) // 1_000_000
 
+#    if ty > 0 and trieu > 0:
+#        return f"{ty} tỉ {trieu} triệu"
+#    elif ty > 0:
+#        return f"{ty} tỉ"
+#    else:
+#        return f"{trieu} triệu"
+    
+tangtruong_t8 = ( (doanhthu_du_kien / doanhthu_t8) - 1 ) * 100
+tanggiam = doanhthu_du_kien - doanhthu_t8
+
+# === Hiển thị KPI ===
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric("💰 Doanh thu đến hiện tại", f"{doanhthu_hientai:,.0f}")
+    st.metric("Doanh thu đến hiện tại", f"{doanhthu_hientai:,.0f}")
 with col2:
-    st.metric("📅 Dự kiến tháng 9", f"{doanhthu_du_kien:,.0f}")
+    st.metric("Dự kiến hết tháng", f"{doanhthu_du_kien:,.0f}", delta=f"{tanggiam:,.0f}")
 with col3:
-    st.metric("📅 Doanh thu T8", f"{tong_doanhthu_t8:,.0f}")
+    st.metric("Tăng trưởng so tháng trước", f"{tangtruong_t8:.1f}%", delta=f"{tangtruong_t8:.1f}%")
     
 #================================
 
