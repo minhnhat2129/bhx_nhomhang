@@ -4,7 +4,7 @@ import plotly.express as px
 import datetime
 
 st.set_page_config(page_title="Dashboard Doanh thu", layout="wide")
-st.title("📊 Dashboard Doanh thu BHX")
+st.title("Dashboard Doanh thu BHX")
 
 # === Load dữ liệu gốc và mapping ===
 df = pd.read_excel("dthumodel.xlsx")
@@ -50,14 +50,14 @@ doanhthu_hientai = df_filtered["Tổng doanh thu"].sum()
 ngay = datetime.date.today().day
 doanhthu_du_kien = doanhthu_hientai / max(1, ngay - 1) * 30
 
-st.markdown("### 📈 KPI Doanh thu")
+st.markdown("KPI Doanh thu")
 kpi1, kpi2, kpi3 = st.columns(3)
-kpi1.metric("💰 Doanh thu hiện tại", f"{doanhthu_hientai:,.0f}")
-kpi2.metric("📅 Dự kiến T9", f"{doanhthu_du_kien:,.0f}")
-kpi3.metric("📅 Doanh thu T8", f"{tong_doanhthu_t8:,.0f}")
+kpi1.metric("Doanh thu hiện tại", f"{doanhthu_hientai:,.0f}")
+kpi2.metric("Dự kiến T9", f"{doanhthu_du_kien:,.0f}")
+kpi3.metric("Doanh thu T8", f"{tong_doanhthu_t8:,.0f}")
 
 # === Biểu đồ tròn FMCG vs Fresh ===
-st.markdown("### 🥧 Cơ cấu Doanh thu FMCG vs Fresh")
+st.markdown("Cơ cấu Doanh thu FMCG vs Fresh")
 
 tong_doanhthu_nh = (
     df_filtered.groupby("NH")[["Tổng doanh thu"]]
