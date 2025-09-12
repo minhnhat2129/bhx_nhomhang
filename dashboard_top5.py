@@ -54,7 +54,7 @@ PASSWORD="BHX123"
 
 # === Load dữ liệu gốc và mapping ===
 df = pd.read_excel("dthumodel.xlsx")
-dthu_thang9 = pd.read_excel("dthut9.xlsx")
+#dthu_thang9 = pd.read_excel("dthut9.xlsx")
 mapping = pd.read_excel("mapping_NH.xlsx")
 dthu_thang8 = pd.read_excel("dthuthang.xlsx")
 
