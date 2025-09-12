@@ -2,12 +2,59 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import datetime
+import os
 
 st.set_page_config(page_title="Dashboard Doanh thu", layout="wide")
-st.title("📊 Dashboard Doanh thu BHX") 
+st.title(f"📊 Dashboard Doanh thu BHX")
+
+#---------------------- upload
+
+st.title("📂 Upload dữ liệu")
+
+# Ô chọn file
+uploaded_file = st.file_uploader("Chọn file Excel hoặc CSV", type=["xlsx", "csv"])
+
+# Nút upload
+if uploaded_file is not None:
+    if st.button("📥 Upload file"):
+        file_path = uploaded_file.name  # Lưu ngay cùng thư mục với code
+        with open(file_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+
+        st.success(f"✅ File đã được lưu vào: {os.path.abspath(file_path)}")
+
+        # Xem thử dữ liệu nếu là Excel/CSV
+        try:
+            if uploaded_file.name.endswith(".xlsx"):
+                df = pd.read_excel(file_path)
+            else:
+                df = pd.read_csv(file_path)
+
+            st.write("📊 Xem trước dữ liệu:")
+            st.dataframe(df.head())
+        except Exception as e:
+            st.error(f"Lỗi khi đọc file: {e}")
+
+#----------------------
+
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+PASSWORD="BHX123"
+
+#* password_input = st.text_input("Nhập mật khẩu để truy cập:", type="password")
+
+#if password_input != PASSWORD:
+  #  st.warning("Vui lòng nhập đúng mật khẩu để xem nội dung 🚫")
+ #   st.stop()   # Dừng lại, không chạy các phần dưới
+#else:
+ #   st.success("")
+    # ======= Toàn bộ code dashboard của bạn đặt dưới đây =======
+#    st.write()
 
 # === Load dữ liệu gốc và mapping ===
 df = pd.read_excel("dthumodel.xlsx")
+dthu_thang9 = pd.read_excel("dthut9.xlsx")
 mapping = pd.read_excel("mapping_NH.xlsx")
 dthu_thang8 = pd.read_excel("dthuthang.xlsx")
 
@@ -35,7 +82,7 @@ with col2:
         options=sieuthi_list,
         default=sieuthi_list[:1] if sieuthi_list else []
     )
-
+st.header(f"Doanh thu BHX {sieuthi_chon}")
 # Lọc dữ liệu cuối cùng
 df_filtered = df_am[df_am["Mã siêu thị"].isin(sieuthi_chon)] if sieuthi_chon else df_am.copy()
 
@@ -45,7 +92,7 @@ if sieuthi_chon:
     doanhthu_t8 = (
         dthu_thang8[
             (dthu_thang8["Mã siêu thị"].isin(sieuthi_chon))
-        ]["Tổng doanh thu"].sum()
+        ]["Tổng doanh thu"].sum() 
     )
 else:
     doanhthu_t8 = (
@@ -56,40 +103,63 @@ else:
     )
 
 # Tính KPI
-doanhthu_hientai = df_filtered["Tổng doanh thu"].sum()
+doanhthu_hientai = df_filtered["Tổng doanh thu"].sum() 
 
 today = datetime.date.today()
 ngay = today.day 
 
 if ngay > 1:
-    doanhthu_du_kien = doanhthu_hientai / (ngay - 1) * 30
+    doanhthu_du_kien = doanhthu_hientai / (ngay - 1) * 30 
 else:
-    doanhthu_du_kien = doanhthu_hientai
+    doanhthu_du_kien = doanhthu_hientai 
 
 #def format_vnd(value):
-    # Làm tròn về triệu
-#    value = round(value, -6)  
-#    ty = value // 1_000_000_000
-#    trieu = (value % 1_000_000_000) // 1_000_000
+ #   # Làm tròn về triệu
+  #  value = round(value, -6)  
+   # ty = value // 1_000_000_000
+    #trieu = (value % 1_000_000_000) // 1_000_000
 
-#    if ty > 0 and trieu > 0:
-#        return f"{ty} tỉ {trieu} triệu"
-#    elif ty > 0:
-#        return f"{ty} tỉ"
-#    else:
-#        return f"{trieu} triệu"
+    #if ty > 0 and trieu > 0:
+     #   return f"{ty} tỉ {trieu} triệu"
+    #elif ty > 0:
+     #   return f"{ty} tỉ"
+    #else:
+     #   return f"{trieu} triệu"
+
+def format_vnd(value: int) -> str:
+    if value >= 1_000_000_000:
+        return f"{value/1_000_000_000:.1f} Tỉ".rstrip("0").rstrip(".")
+    elif value >= 1_000_000:
+        return f"{value/1_000_000:.0f} Triệu"
+    else:
+        return f"{value/1_000_000:,.0f} Triệu"  # trường hợp nhỏ hơn 1 triệu
+     
     
-tangtruong_t8 = ( (doanhthu_du_kien / doanhthu_t8) - 1 ) * 100
+tangtruong_t8 = ( (doanhthu_du_kien / (doanhthu_t8)) - 1 ) * 100
 tanggiam = doanhthu_du_kien - doanhthu_t8
 
-# === Hiển thị KPI ===
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric("Doanh thu đến hiện tại", f"{doanhthu_hientai:,.0f}")
-with col2:
-    st.metric("Dự kiến hết tháng", f"{doanhthu_du_kien:,.0f}", delta=f"{tanggiam:,.0f}")
-with col3:
-    st.metric("Tăng trưởng so tháng trước", f"{tangtruong_t8:.1f}%", delta=f"{tangtruong_t8:.1f}%")
+dthutbngay = doanhthu_hientai / (ngay - 1)
+dthutbngaythangtruoc = doanhthu_t8 / 31
+tanggiamtbngay = dthutbngay - dthutbngaythangtruoc
+
+trai1, phai1 = st.columns(2)
+
+with trai1:
+    # === Hiển thị KPI ===
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Doanh thu đến hiện tại", format_vnd(doanhthu_hientai))
+    with col2:
+        st.metric("Dự kiến hết tháng", format_vnd(doanhthu_du_kien), delta=format_vnd(tanggiam))
+    with col3:
+        st.metric("Tăng trưởng so tháng trước", f"{tangtruong_t8:.1f}%", delta=f"{tangtruong_t8:.1f}%")
+    with col4:
+        st.metric("Doanh thu trung bình ngày", format_vnd(dthutbngay), delta=format_vnd(tanggiamtbngay))
+        
+with phai1:
+    st.metric("Doanh thu đến hiện tại", format_vnd(doanhthu_hientai))
+
+
     
 #================================
 
