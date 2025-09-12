@@ -5,7 +5,7 @@ Dashboard hiển thị tổng quan doanh thu theo AM, siêu thị, ngày và th�
 ## Cách chạy trên local
 ```bash
 pip install -r requirements.txt
-streamlit run dashboard_top5.py
+streamlit run quantri.py
 ```
 
 ## Deploy lên Streamlit Cloud
