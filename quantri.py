@@ -4,8 +4,7 @@ import plotly.express as px
 import datetime
 import os
 
-st.set_page_config(page_title="Dashboard Doanh thu", layout="wide")
-st.title(f"📊 Dashboard Doanh thu BHX")
+st.set_page_config(page_title="BHX Quản trị", layout="wide")
 
 #---------------------- upload
 
