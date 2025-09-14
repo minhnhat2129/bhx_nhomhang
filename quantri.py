@@ -383,7 +383,7 @@ with col21:
         height=500,
         margin=dict(l=30, r=30, t=30, b=30),
         plot_bgcolor="white",
-        paper_bgcolor="red",
+        paper_bgcolor="white",
         xaxis=dict(
             showgrid=False,
             linecolor="#ccc",
