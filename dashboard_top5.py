@@ -103,7 +103,7 @@ else:
 
 def format_vnd(value: int) -> str:
     if value >= 1_000_000_000:
-        return f"{value/1_000_000_000:.1f} Tỉ".rstrip("0").rstrip(".")
+        return f"{value/1_000_000_000:.3f} Tỉ".rstrip("0").rstrip(".")
     elif value >= 1_000_000:
         return f"{value/1_000_000:.0f} Triệu"
     else:
