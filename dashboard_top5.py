@@ -84,7 +84,7 @@ today = datetime.date.today()
 ngay = today.day 
 
 if ngay > 1:
-    doanhthu_du_kien = doanhthu_hientai / (ngay - 1) * 30 
+    doanhthu_du_kien = doanhthu_hientai / (ngay - 1) * 31
 else:
     doanhthu_du_kien = doanhthu_hientai 
 
