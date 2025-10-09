@@ -117,22 +117,19 @@ dthutbngay = doanhthu_hientai / (ngay - 1)
 dthutbngaythangtruoc = doanhthu_t8 / 31
 tanggiamtbngay = dthutbngay - dthutbngaythangtruoc
 
-trai1, phai1 = st.columns(2)
 
-with trai1:
-    # === Hiển thị KPI ===
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Doanh thu đến hiện tại", format_vnd(doanhthu_hientai))
-    with col2:
-        st.metric("Dự kiến hết tháng", format_vnd(doanhthu_du_kien), delta=format_vnd(tanggiam))
-    with col3:
-        st.metric("Tăng trưởng so tháng trước", f"{tangtruong_t8:.1f}%", delta=f"{tangtruong_t8:.1f}%")
-    with col4:
-        st.metric("Doanh thu trung bình ngày", format_vnd(dthutbngay), delta=format_vnd(tanggiamtbngay))
-        
-with phai1:
+# === Hiển thị KPI ===
+col1, col2, col3, col4 = st.columns(4)
+with col1:
     st.metric("Doanh thu đến hiện tại", format_vnd(doanhthu_hientai))
+with col2:
+    st.metric("Dự kiến hết tháng", format_vnd(doanhthu_du_kien), delta=format_vnd(tanggiam))
+with col3:
+    st.metric("Tăng trưởng so tháng trước", f"{tangtruong_t8:.1f}%", delta=f"{tangtruong_t8:.1f}%")
+with col4:
+    st.metric("Doanh thu trung bình ngày", format_vnd(dthutbngay), delta=format_vnd(tanggiamtbngay))
+        
+
 
 
     
